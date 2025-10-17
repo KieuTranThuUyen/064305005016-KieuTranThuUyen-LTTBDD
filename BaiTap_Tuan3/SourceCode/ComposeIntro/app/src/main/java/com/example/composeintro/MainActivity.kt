@@ -40,6 +40,24 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
+import java.util.Locale
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material3.IconButton
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +90,15 @@ fun JetpackApp() {
             composable("checkbox") { CheckboxScreen(navController) }
             composable("switch") { SwitchScreen(navController) }
             composable("card") { CardScreen(navController) }
+            composable("radiobutton") { RadioButtonScreen(navController) }
+            composable("button") { ButtonScreen(navController) }
+            composable("slider") { SliderScreen(navController) }
+            composable("listview") { ListViewScreen(navController) }
+            composable("gridview") { GridViewScreen(navController) }
+            composable("progressbar") { ProgressBarScreen(navController) }
+            composable("box") { BoxScreen(navController) }
+            composable("spacer") { SpacerScreen(navController) }
+            composable("iconbutton") { IconButtonScreen(navController) }
         }
     }
 }
@@ -185,20 +212,31 @@ fun UIComponentListScreen(navController: NavController) {
             val uiGroups = listOf(
                 "Display" to listOf(
                     "Text" to ("Displays text" to "text_detail"),
-                    "Image" to ("Displays an image" to "image")
+                    "Image" to ("Displays an image" to "image"),
+                    "ListView" to ("Scrollable list" to "listview"),
+                    "GridView" to ("Grid layout" to "gridview"),
+                    "ProgressBar" to ("Progress indicator" to "progressbar"),
+                    "Card" to ("Displays content in a card" to "card")
                 ),
                 "Input" to listOf(
                     "TextField" to ("Input field for text" to "textfield"),
-                    "PasswordField" to ("Input field for passwords" to "passwordfield")
+                    "PasswordField" to ("Input field for passwords" to "passwordfield"),
+                    "Slider" to ("Sliding value selector" to "slider")
                 ),
                 "Selection" to listOf(
                     "Checkbox" to ("Toggleable check option" to "checkbox"),
-                    "Switch" to ("On/off toggle switch" to "switch")
+                    "Switch" to ("On/off toggle switch" to "switch"),
+                    "RadioButton" to ("Single selection option" to "radiobutton")
                 ),
                 "Layout" to listOf(
                     "Column" to ("Arranges elements vertically" to "column_layout"),
                     "Row" to ("Arranges elements horizontally" to "row_layout"),
-                    "Card" to ("Displays content in a card" to "card")
+                    "Box" to ("Overlays & positions content" to "box"),
+                    "Spacer" to ("Creates space between" to "spacer")
+                ),
+                "Actions" to listOf(
+                    "Button" to ("Action button" to "button"),
+                    "IconButton" to ("Button with icon" to "iconbutton")
                 )
             )
 
@@ -455,30 +493,101 @@ fun PasswordFieldScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckboxScreen(navController: NavController) {
+    val options = listOf("Đọc sách", "Nghe nhạc", "Xem phim", "Chơi thể thao")
+    val checkedStates = remember { mutableStateListOf(false, false, false, false) }
+
     Scaffold(
-        topBar = { ScreenHeader(title = "Checkbox", showBack = true) { navController.popBackStack() } },
-        containerColor = Color.White
+        topBar = {
+            ScreenHeader(
+                title = "Checkbox",
+                showBack = true
+            ) { navController.popBackStack() }
+        },
+        containerColor = Color(0xFFF8FAFC)
     ) { padding ->
+
         Column(
-            Modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(20.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
-            var checked by remember { mutableStateOf(false) }
-            Checkbox(
-                checked = checked,
-                onCheckedChange = { checked = it },
-                modifier = Modifier.padding(8.dp)
-            )
             Text(
-                text = "Checked: $checked",
-                fontSize = 16.sp,
-                color = Color.Black
+                text = "CHECKBOX – Chọn nhiều sở thích",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1565C0),
+                modifier = Modifier.padding(bottom = 20.dp)
             )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    options.forEachIndexed { index, option ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { checkedStates[index] = !checkedStates[index] }
+                                .background(
+                                    if (checkedStates[index]) Color(0xFFE3F2FD)
+                                    else Color.Transparent
+                                )
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = checkedStates[index],
+                                onCheckedChange = { checkedStates[index] = it },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Color(0xFF1976D2),
+                                    uncheckedColor = Color.Gray
+                                )
+                            )
+                            Text(
+                                text = option,
+                                fontSize = 18.sp,
+                                color = Color(0xFF222222),
+                                modifier = Modifier.padding(start = 6.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            val selectedItems = options.filterIndexed { index, _ -> checkedStates[index] }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Text(
+                    text = if (selectedItems.isEmpty())
+                        "Chưa chọn mục nào"
+                    else
+                        "Đã chọn: ${selectedItems.joinToString(", ")}",
+                    fontSize = 16.sp,
+                    color = Color(0xFF333333),
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
 }
@@ -487,11 +596,87 @@ fun CheckboxScreen(navController: NavController) {
 @Composable
 fun SwitchScreen(navController: NavController) {
     Scaffold(
-        topBar = { ScreenHeader(title = "Switch", showBack = true) { navController.popBackStack() } },
+        topBar = {
+            ScreenHeader(
+                title = "Switch",
+                showBack = true
+            ) { navController.popBackStack() }
+        },
         containerColor = Color.White
     ) { padding ->
+
+        var isOn by remember { mutableStateOf(false) }
+
         Column(
-            Modifier
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Text(
+                text = "SWITCH - Bật / Tắt trạng thái",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1976D2)
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F7FF)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = if (isOn) "Đang bật" else "Đang tắt",
+                        fontSize = 18.sp,
+                        color = Color(0xFF333333)
+                    )
+                    Switch(
+                        checked = isOn,
+                        onCheckedChange = { isOn = it }
+                    )
+                }
+            }
+
+            Text(
+                text = "Trạng thái hiện tại: ${if (isOn) "Bật" else "Tắt"}",
+                fontSize = 16.sp,
+                color = Color(0xFF333333),
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CardScreen(navController: NavController) {
+    Scaffold(
+        topBar = {
+            ScreenHeader(
+                title = "Card",
+                showBack = true
+            ) { navController.popBackStack() }
+        },
+        containerColor = Color(0xFFF5F5F5)
+    ) { padding ->
+
+        Column(
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
@@ -499,61 +684,61 @@ fun SwitchScreen(navController: NavController) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            var checked by remember { mutableStateOf(false) }
-            Switch(
-                checked = checked,
-                onCheckedChange = { checked = it },
-                modifier = Modifier.padding(8.dp)
-            )
-            Text(
-                text = "Switch is: $checked",
-                fontSize = 16.sp,
-                color = Color.Black
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CardScreen(navController: NavController) {
-    Scaffold(
-        topBar = { ScreenHeader(title = "Card", showBack = true) { navController.popBackStack() } },
-        containerColor = Color.White
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .padding(8.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                modifier = Modifier.fillMaxWidth(0.9f),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.compose_logo),
+                        contentDescription = "Compose Logo",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Fit
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
                     Text(
-                        text = "Sample Card",
+                        text = "Jetpack Compose Card",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1976D2)
                     )
+
                     Spacer(Modifier.height(8.dp))
+
                     Text(
-                        text = "This is a sample card content.",
+                        text = "Jetpack Compose makes building Android UI easier and faster. This card demonstrates how to display an image, text, and a button together.",
                         fontSize = 14.sp,
-                        color = Color.DarkGray
+                        color = Color.DarkGray,
+                        lineHeight = 20.sp
                     )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Button(
+                        onClick = { /* TODO: Handle click */ },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Learn More", color = Color.White)
+                    }
                 }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -636,6 +821,723 @@ fun ColumnLayoutScreen(navController: NavController) {
                                 .background(color, RoundedCornerShape(16.dp))
                         )
                     }
+                }
+            }
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RadioButtonScreen(navController: NavController) {
+    Scaffold(
+        topBar = { ScreenHeader(title = "RadioButton", showBack = true) { navController.popBackStack() } },
+        containerColor = Color(0xFFF8FAFC)
+    ) { padding ->
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Chọn giới tính:",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1976D2)
+                    )
+
+                    var selectedGender by remember { mutableStateOf("male") }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(32.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = selectedGender == "male",
+                                onClick = { selectedGender = "male" },
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF2196F3))
+                            )
+                            Text("Nam", fontSize = 16.sp, modifier = Modifier.padding(start = 4.dp))
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = selectedGender == "female",
+                                onClick = { selectedGender = "female" },
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFE91E63))
+                            )
+                            Text("Nữ", fontSize = 16.sp, modifier = Modifier.padding(start = 4.dp))
+                        }
+                    }
+
+                    Text(
+                        text = "Đã chọn: ${if (selectedGender == "male") "Nam" else "Nữ"}",
+                        fontSize = 14.sp,
+                        color = Color(0xFFD32F2F),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Chọn màu yêu thích:",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1976D2)
+                    )
+
+                    var selectedColor by remember { mutableStateOf("blue") }
+
+                    val colorOptions = listOf(
+                        Triple("Xanh dương", Color(0xFF2196F3), "blue"),
+                        Triple("Đỏ", Color(0xFFF44336), "red"),
+                        Triple("Xanh lá", Color(0xFF4CAF50), "green")
+                    )
+
+                    colorOptions.forEach { (label, color, value) ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = selectedColor == value,
+                                onClick = { selectedColor = value },
+                                colors = RadioButtonDefaults.colors(selectedColor = color)
+                            )
+                            Text(label, fontSize = 16.sp, modifier = Modifier.padding(start = 4.dp))
+                        }
+                    }
+
+                    Text(
+                        text = "Màu yêu thích: $selectedColor",
+                        fontSize = 14.sp,
+                        color = Color(0xFFD32F2F),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ButtonScreen(navController: NavController) {
+    Scaffold(
+        topBar = { ScreenHeader(title = "Button", showBack = true) { navController.popBackStack() } },
+        containerColor = Color.White
+    ) { padding ->
+
+        var clickCount by remember { mutableIntStateOf(0) }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center, // Căn giữa theo chiều dọc
+            horizontalAlignment = Alignment.CenterHorizontally // Căn giữa theo chiều ngang
+        ) {
+
+            Button(
+                onClick = { clickCount++ },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF007BFF)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Click Me!", color = Color.White, fontSize = 16.sp)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text("Clicked: $clickCount times", color = Color.Red, fontSize = 14.sp)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { clickCount = 0 },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF757575)),
+                shape = RoundedCornerShape(12.dp),
+                enabled = clickCount > 0
+            ) {
+                Text("Reset", color = Color.White, fontSize = 16.sp)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SliderScreen(navController: NavController) {
+    Scaffold(
+        topBar = {
+            ScreenHeader(
+                title = "Slider",
+                showBack = true
+            ) { navController.popBackStack() }
+        },
+        containerColor = Color.White
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            var sliderValue by remember { mutableFloatStateOf(0f) }
+
+            Slider(
+                value = sliderValue,
+                onValueChange = { sliderValue = it },
+                valueRange = 0f..100f,
+                modifier = Modifier.fillMaxWidth(0.8f),
+                colors = SliderDefaults.colors(
+                    thumbColor = Color(0xFF007BFF),
+                    activeTrackColor = Color(0xFF007BFF)
+                )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Value: ${sliderValue.toInt()}%",
+                fontSize = 18.sp,
+                color = Color.Black
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ListViewScreen(navController: NavController) {
+    Scaffold(
+        topBar = { ScreenHeader(title = "ListView", showBack = true) { navController.popBackStack() } },
+        containerColor = Color.White
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(20) { index ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFE3F2FD)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = Color(0xFF1976D2),
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                "Item $index",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0D47A1)
+                            )
+                            Text(
+                                "Description for item $index",
+                                color = Color(0xFF1565C0)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GridViewScreen(navController: NavController) {
+    Scaffold(
+        topBar = { ScreenHeader(title = "GridView", showBack = true) { navController.popBackStack() } },
+        containerColor = Color.White
+    ) { padding ->
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(12) { index ->
+                val backgroundColor = when (index % 4) {
+                    0 -> Color(0xFF2196F3)
+                    1 -> Color(0xFFF44336)
+                    2 -> Color(0xFF4CAF50)
+                    else -> Color(0xFFFFC107)
+                }
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = backgroundColor)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Item $index",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProgressBarScreen(navController: NavController) {
+    Scaffold(
+        topBar = { ScreenHeader(title = "ProgressBar", showBack = true) { navController.popBackStack() } },
+        containerColor = Color.White
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(
+                color = Color(0xFF007BFF),
+                modifier = Modifier.size(60.dp)
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            var progress by remember { mutableFloatStateOf(0f) }
+            LaunchedEffect(Unit) {
+                while (true) {
+                    delay(50)
+                    progress = (progress + 0.01f).coerceAtMost(1f)
+                    if (progress >= 1f) progress = 0f
+                }
+            }
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(8.dp),
+                color = Color(0xFF007BFF),
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                strokeCap = StrokeCap.Round,
+                gapSize = 0.dp,
+                drawStopIndicator = {}
+            )
+
+            Text(
+                text = "Progress: ${String.format(Locale.getDefault(), "%.1f", progress * 100)}%",
+                fontSize = 16.sp,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BoxScreen(navController: NavController) {
+    Scaffold(
+        topBar = {
+            ScreenHeader(
+                title = "Box Layout",
+                showBack = true
+            ) { navController.popBackStack() }
+        },
+        containerColor = Color.White
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
+            Text(
+                text = "BOX - Chồng lớp & Căn chỉnh",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1976D2)
+            )
+
+            Card(
+                modifier = Modifier.size(220.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            ) {
+                Box(Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .size(50.dp)
+                            .background(Color(0xFF4CAF50), RoundedCornerShape(10.dp))
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(90.dp)
+                            .background(Color(0xFFFF9800), RoundedCornerShape(12.dp))
+                    ) {
+                        Text(
+                            text = "CENTER",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(40.dp)
+                            .background(Color(0xFFE91E63), RoundedCornerShape(10.dp))
+                    )
+                }
+            }
+
+            Text(
+                text = "TopStart • Center • BottomEnd",
+                fontSize = 14.sp,
+                color = Color(0xFF555555),
+                fontStyle = FontStyle.Italic
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .padding(vertical = 8.dp),
+                color = Color(0xFFE0E0E0),
+                thickness = 1.dp
+            )
+
+            Text(
+                text = "Các kiểu căn chỉnh",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1976D2)
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(Color(0xFF2196F3), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.TopStart
+                ) {
+                    Text("TL", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(Color(0xFF4CAF50), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("C", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(Color(0xFFF44336), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    Text("BR", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SpacerScreen(navController: NavController) {
+    Scaffold(
+        topBar = { ScreenHeader(title = "Spacer", showBack = true) { navController.popBackStack() } },
+        containerColor = Color.White
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
+            Text(
+                text = "SPACER - Tạo khoảng cách",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1976D2)
+            )
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color(0xFF2196F3), RoundedCornerShape(12.dp))
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color(0xFFF44336), RoundedCornerShape(12.dp))
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color(0xFF4CAF50), RoundedCornerShape(12.dp))
+                )
+            }
+
+            Text(
+                "Spacer thủ công: height(8.dp), height(16.dp)",
+                fontSize = 14.sp,
+                color = Color.Red
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                "Arrangement.spacedBy():",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .background(Color(0xFFFF9800), RoundedCornerShape(10.dp))
+                )
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .background(Color(0xFF9C27B0), RoundedCornerShape(10.dp))
+                )
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .background(Color(0xFF607D8B), RoundedCornerShape(10.dp))
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                "Row spacedBy():",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color(0xFFE91E63), RoundedCornerShape(8.dp))
+                )
+                Text("16dp")
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color(0xFF00BCD4), RoundedCornerShape(8.dp))
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun IconButtonScreen(navController: NavController) {
+    Scaffold(
+        topBar = { ScreenHeader(title = "IconButton", showBack = true) { navController.popBackStack() } },
+        containerColor = Color.White
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Text(
+                text = "ICONBUTTON - Nút có icon",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1976D2)
+            )
+
+            var likes by remember { mutableIntStateOf(0) }
+            var isFavorite by remember { mutableStateOf(false) }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { likes++ }) {
+                            Icon(
+                                imageVector = Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Like",
+                                tint = Color(0xFFE91E63)
+                            )
+                        }
+                        Text("$likes likes", fontSize = 16.sp)
+                    }
+                    Text("Like Button", fontSize = 14.sp, color = Color.Gray)
+                }
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { isFavorite = !isFavorite }) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Favorite",
+                                tint = if (isFavorite) Color(0xFFFF9800) else Color.Gray
+                            )
+                        }
+                        Text(
+                            if (isFavorite) "Favorited ❤️" else "Favorite",
+                            fontSize = 16.sp
+                        )
+                    }
+                    Text("Toggle Favorite", fontSize = 14.sp, color = Color.Gray)
+                }
+            }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "More Icon Buttons",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF1976D2)
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Share,
+                                contentDescription = "Share",
+                                tint = Color(0xFF2196F3)
+                            )
+                        }
+                        IconButton(onClick = { }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = "Delete",
+                                tint = Color(0xFFF44336)
+                            )
+                        }
+                        IconButton(onClick = { }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Menu,
+                                contentDescription = "Menu",
+                                tint = Color(0xFF4CAF50)
+                            )
+                        }
+                    }
+
+                    Text("Các icon thường gặp trong ứng dụng", fontSize = 14.sp, color = Color.Gray)
                 }
             }
         }
