@@ -83,25 +83,63 @@ fun HomeScreen() {
     }
 }
 
-// ==================== ONBOARDING DATA ====================
-private data class OnboardingPageData(
+// ==================== ONBOARDING PAGE CLASS ====================
+class OnboardingPage(
     val title: String,
     val description: String,
     val imageRes: Int
-)
+) {
+    @Composable
+    fun PageContent() {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(200.dp)
+            )
 
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1A1A),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = description,
+                fontSize = 15.sp,
+                color = Color(0xFF666666),
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+        }
+    }
+}
+
+// ==================== ONBOARDING PAGES LIST ====================
 private val onboardingPages = listOf(
-    OnboardingPageData(
+    OnboardingPage(
         title = "Easy Time Management",
         description = "With management based on priority and daily tasks, it will give you convenience in managing and determining the tasks that must be done first.",
         imageRes = R.drawable.first
     ),
-    OnboardingPageData(
+    OnboardingPage(
         title = "Increase Work Effectiveness",
         description = "Time management and the determination of more important tasks will give your job statistics better and always improve.",
         imageRes = R.drawable.second
     ),
-    OnboardingPageData(
+    OnboardingPage(
         title = "Reminder Notification",
         description = "This app also provides reminders for you so you don't forget your tasks and complete them on time.",
         imageRes = R.drawable.third
@@ -125,7 +163,7 @@ fun OnboardingScreen(onGetStarted: () -> Unit = {}) {
             state = pagerState,
             modifier = Modifier.fillMaxSize()
         ) { page ->
-            val data = onboardingPages[page]
+            val currentPage = onboardingPages[page]
 
             Column(
                 modifier = Modifier
@@ -167,39 +205,9 @@ fun OnboardingScreen(onGetStarted: () -> Unit = {}) {
                     }
                 }
 
-                // === Center content ===
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = data.imageRes),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .height(200.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Text(
-                        text = data.title,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A),
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = data.description,
-                        fontSize = 15.sp,
-                        color = Color(0xFF666666),
-                        textAlign = TextAlign.Center,
-                        lineHeight = 22.sp
-                    )
+                // === Center content: call class PageContent() ===
+                Box(modifier = Modifier.weight(1f)) {
+                    currentPage.PageContent()
                 }
 
                 // === Bottom row: Back + Next / Get Started ===
