@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,75 +28,118 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import androidx.compose.foundation.clickable
 
-/*------------------ DỮ LIỆU ------------------*/
+/*------------------ OOP MODELS ------------------*/
+open class Person(val name: String)
+
 data class Book(val id: Int, val title: String, var selected: Boolean = false)
-data class Student(val id: Int, val name: String, val borrowedBooks: MutableList<Book> = mutableListOf())
 
-/*------------------ ACTIVITY CHÍNH ------------------*/
+class Student(
+    name: String,
+    val borrowedBooks: MutableList<Book> = mutableListOf()
+) : Person(name) {
+    fun borrowBooks(books: List<Book>) {
+        books.forEach { book ->
+            if (!borrowedBooks.any { it.id == book.id }) borrowedBooks.add(book.copy(selected = false))
+        }
+    }
+}
+
+/*------------------ REPOSITORY ------------------*/
+interface StudentRepository {
+    fun save(students: List<Student>)
+    fun load(): MutableList<Student>
+}
+
+class SharedPrefStudentRepository(private val context: Context) : StudentRepository {
+    override fun save(students: List<Student>) {
+        val sharedPref = context.getSharedPreferences("library_prefs", Context.MODE_PRIVATE)
+        val json = Gson().toJson(students)
+        sharedPref.edit().apply {
+            putString("students_data", json)
+            apply()
+        }
+    }
+
+    override fun load(): MutableList<Student> {
+        val sharedPref = context.getSharedPreferences("library_prefs", Context.MODE_PRIVATE)
+        val json = sharedPref.getString("students_data", null)
+        return if (json != null) {
+            val type = object : TypeToken<MutableList<Student>>() {}.type
+            Gson().fromJson(json, type)
+        } else mutableListOf()
+    }
+}
+
+/*------------------ LIBRARY MANAGER ------------------*/
+class LibraryManager(private val repository: StudentRepository) {
+    val students: MutableList<Student> = repository.load().toMutableList()
+        .ifEmpty {
+            mutableListOf(
+                Student("Nguyen Van A"),
+                Student("Nguyen Thi B"),
+                Student("Nguyen Van C")
+            )
+        }
+
+    val allBooks: MutableList<Book> = mutableListOf(
+        Book(1, "Sách 01"),
+        Book(2, "Sách 02"),
+        Book(3, "Sách 03"),
+        Book(4, "Sách 04"),
+        Book(5, "Sách 05")
+    )
+
+    fun borrowBooks(student: Student, books: List<Book>) {
+        student.borrowBooks(books)
+        repository.save(students)
+    }
+}
+
+/*------------------ ACTIVITY ------------------*/
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val repo = SharedPrefStudentRepository(this)
+        val manager = LibraryManager(repo)
+
         setContent {
             MaterialTheme {
-                LibraryApp(this)
+                LibraryApp(manager)
             }
         }
     }
 }
 
-/*------------------ LƯU / TẢI DỮ LIỆU ------------------*/
-fun saveStudentsToPrefs(context: Context, students: List<Student>) {
-    val sharedPref = context.getSharedPreferences("library_prefs", Context.MODE_PRIVATE)
-    val json = Gson().toJson(students)
-    sharedPref.edit().apply {
-        putString("students_data", json)
-        apply()
-    }
-}
-
-fun loadStudentsFromPrefs(context: Context): MutableList<Student>? {
-    val sharedPref = context.getSharedPreferences("library_prefs", Context.MODE_PRIVATE)
-    val json = sharedPref.getString("students_data", null)
-    return if (json != null) {
-        val type = object : TypeToken<MutableList<Student>>() {}.type
-        Gson().fromJson(json, type)
-    } else null
-}
-
-/*------------------ ỨNG DỤNG ------------------*/
+/*------------------ COMPOSABLE APP ------------------*/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryApp(context: Context) {
+fun LibraryApp(manager: LibraryManager) {
     val navController = rememberNavController()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            "HỆ THỐNG",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
-                            fontSize = 18.sp,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            "QUẢN LÝ THƯ VIỆN",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Center
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "HỆ THỐNG",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                            Text(
+                                "QUẢN LÝ THƯ VIỆN",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                modifier = Modifier.fillMaxWidth()
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
         bottomBar = { BottomNavigationBar(navController) }
@@ -105,14 +149,14 @@ fun LibraryApp(context: Context) {
             startDestination = "quanly",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("quanly") { LibraryUI(context) }
-            composable("sach") { BookListScreen() }
-            composable("sinhvien") { StudentListScreen(context) }
+            composable("quanly") { LibraryUI(manager) }
+            composable("sach") { BookListScreen(manager) }
+            composable("sinhvien") { StudentListScreen(manager) }
         }
     }
 }
 
-/*------------------ THANH ĐIỀU HƯỚNG ------------------*/
+/*------------------ BOTTOM NAVIGATION ------------------*/
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val items = listOf("quanly", "sach", "sinhvien")
@@ -143,42 +187,18 @@ fun BottomNavigationBar(navController: NavHostController) {
     }
 }
 
-/*------------------ GIAO DIỆN CHÍNH (QUẢN LÝ) ------------------*/
+/*------------------ LIBRARY UI ------------------*/
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryUI(context: Context) {
-    val allBooks = remember {
-        mutableStateListOf(
-            Book(1, "Sách 01"),
-            Book(2, "Sách 02"),
-            Book(3, "Sách 03"),
-            Book(4, "Sách 04"),
-            Book(5, "Sách 05")
-        )
-    }
-
-    val students = remember {
-        mutableStateListOf(
-            *(loadStudentsFromPrefs(context)
-                ?: listOf(
-                    Student(1, "Nguyen Van A", mutableListOf(allBooks[0], allBooks[1])),
-                    Student(2, "Nguyen Thi B", mutableListOf(allBooks[2])),
-                    Student(3, "Nguyen Van C", mutableListOf())
-                )).toTypedArray()
-        )
-    }
-
-    var selectedStudent by remember { mutableStateOf(students[0]) }
-    var showStudentList by remember { mutableStateOf(false) } // kiểm soát danh sách sinh viên
+fun LibraryUI(manager: LibraryManager) {
+    var selectedStudent by remember { mutableStateOf(manager.students.first()) }
+    var showStudentList by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // chữ "Sinh viên" trên khung
         Text(
             "Sinh viên",
             fontWeight = FontWeight.SemiBold,
@@ -188,11 +208,7 @@ fun LibraryUI(context: Context) {
         )
         Spacer(Modifier.height(4.dp))
 
-        // Khung tên + nút thay đổi
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = selectedStudent.name,
                 onValueChange = {},
@@ -203,17 +219,11 @@ fun LibraryUI(context: Context) {
             Button(
                 onClick = { showStudentList = !showStudentList },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0)),
-                modifier = Modifier
-                    .height(IntrinsicSize.Min)  // 🟢 Đồng bộ chiều cao với TextField
-                    .wrapContentWidth(),
+                modifier = Modifier.height(IntrinsicSize.Min).wrapContentWidth(),
                 shape = RoundedCornerShape(8.dp)
-
-            ) {
-                Text("Thay đổi", color = Color.White)
-            }
+            ) { Text("Thay đổi", color = Color.White) }
         }
 
-        // Hiển thị danh sách sinh viên khi nhấn nút
         if (showStudentList) {
             Spacer(Modifier.height(8.dp))
             LazyColumn(
@@ -221,9 +231,9 @@ fun LibraryUI(context: Context) {
                     .fillMaxWidth()
                     .background(Color(0xFFF2F2F2), RoundedCornerShape(8.dp))
                     .padding(4.dp)
-                    .heightIn(max = 200.dp) // giới hạn chiều cao
+                    .heightIn(max = 200.dp)
             ) {
-                items(students) { student ->
+                items(manager.students) { student ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -232,16 +242,12 @@ fun LibraryUI(context: Context) {
                                 showStudentList = false
                             }
                             .padding(8.dp)
-                    ) {
-                        Text(student.name, fontSize = 16.sp)
-                    }
+                    ) { Text(student.name, fontSize = 16.sp) }
                 }
             }
         }
 
         Spacer(Modifier.height(24.dp))
-
-        // Phần danh sách sách đã mượn
         Text(
             "Danh sách sách đã mượn",
             fontWeight = FontWeight.SemiBold,
@@ -263,17 +269,13 @@ fun LibraryUI(context: Context) {
                     textAlign = TextAlign.Center,
                     color = Color.Gray,
                     fontSize = 14.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp)
+                    modifier = Modifier.fillMaxWidth().padding(20.dp)
                 )
             } else {
                 LazyColumn {
                     items(selectedStudent.borrowedBooks) { book ->
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             shape = RoundedCornerShape(8.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
                             elevation = CardDefaults.cardElevation(3.dp)
@@ -294,57 +296,36 @@ fun LibraryUI(context: Context) {
         }
 
         Spacer(Modifier.height(12.dp))
-
         Button(
             onClick = { showAddDialog = true },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0)),
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth(0.6f)
-        ) {
-            Text("Thêm", color = Color.White)
-        }
+        ) { Text("Thêm", color = Color.White) }
     }
 
-    // Dialog thêm sách
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
             confirmButton = {
                 Button(onClick = {
-                    val selected = allBooks.filter { it.selected }
-                    selected.forEach { book ->
-                        if (!selectedStudent.borrowedBooks.any { it.id == book.id }) {
-                            selectedStudent.borrowedBooks.add(book.copy(selected = false))
-                        }
-                    }
-                    saveStudentsToPrefs(context, students)
-                    selectedStudent = selectedStudent.copy(
-                        borrowedBooks = selectedStudent.borrowedBooks.toMutableList()
-                    )
+                    val selected = manager.allBooks.filter { it.selected }
+                    manager.borrowBooks(selectedStudent, selected)
                     showAddDialog = false
-                }) {
-                    Text("Xác nhận")
-                }
+                }) { Text("Xác nhận") }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showAddDialog = false }) {
-                    Text("Hủy")
-                }
+                OutlinedButton(onClick = { showAddDialog = false }) { Text("Hủy") }
             },
             title = { Text("Chọn sách muốn mượn") },
             text = {
                 LazyColumn {
-                    items(allBooks) { book ->
+                    items(manager.allBooks) { book ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(4.dp)
+                            modifier = Modifier.fillMaxWidth().padding(4.dp)
                         ) {
-                            Checkbox(
-                                checked = book.selected,
-                                onCheckedChange = { checked -> book.selected = checked }
-                            )
+                            Checkbox(checked = book.selected, onCheckedChange = { book.selected = it })
                             Text(book.title)
                         }
                     }
@@ -354,48 +335,34 @@ fun LibraryUI(context: Context) {
     }
 }
 
-
-
-/*------------------ MÀN HÌNH DANH SÁCH SÁCH ------------------*/
+/*------------------ BOOK LIST SCREEN ------------------*/
 @Composable
-fun BookListScreen() {
-    val books = listOf("Sách 01", "Sách 02", "Sách 03", "Sách 04", "Sách 05")
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp)
-    ) {
+fun BookListScreen(manager: LibraryManager) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Danh sách Sách", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Spacer(Modifier.height(12.dp))
         LazyColumn {
-            items(books) { book ->
+            items(manager.allBooks) { book ->
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Text(book, modifier = Modifier.padding(12.dp))
-                }
+                ) { Text(book.title, modifier = Modifier.padding(12.dp)) }
             }
         }
     }
 }
 
-/*------------------ MÀN HÌNH DANH SÁCH SINH VIÊN ------------------*/
+/*------------------ STUDENT LIST SCREEN ------------------*/
 @Composable
-fun StudentListScreen(context: Context) {
-    val students = loadStudentsFromPrefs(context)
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp)
-    ) {
+fun StudentListScreen(manager: LibraryManager) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Danh sách Sinh viên", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Spacer(Modifier.height(12.dp))
         LazyColumn {
-            items(students ?: emptyList()) { s ->
+            items(manager.students) { s ->
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(2.dp)
                 ) {
@@ -410,7 +377,12 @@ fun StudentListScreen(context: Context) {
 @Preview(showBackground = true)
 @Composable
 fun LibraryPreview() {
-    MaterialTheme {
-        LibraryApp(context = androidx.compose.ui.platform.LocalContext.current)
-    }
+    val fakeManager = LibraryManager(object : StudentRepository {
+        override fun save(students: List<Student>) {}
+        override fun load(): MutableList<Student> = mutableListOf(
+            Student("Nguyen Van A"),
+            Student("Nguyen Thi B")
+        )
+    })
+    MaterialTheme { LibraryApp(fakeManager) }
 }

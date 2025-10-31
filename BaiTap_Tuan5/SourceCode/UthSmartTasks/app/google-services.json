@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1070677603381",
+    "project_id": "uyen-b2ea3",
+    "storage_bucket": "uyen-b2ea3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1070677603381:android:182889c171638739e9ed7c",
+        "android_client_info": {
+          "package_name": "com.example.uthsmarttasks"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNWpjtAUqaP8b-GskzlVv3wwsbUpIHF7A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
