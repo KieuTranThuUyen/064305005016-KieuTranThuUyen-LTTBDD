@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- QUYỀN -->
+    <!-- 🌐 Firebase & mạng -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- 🔔 Thông báo (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 📱 Nhận SMS tự động (auto-fill OTP) -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
 
     <application
         android:allowBackup="true"
@@ -14,8 +20,15 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="false"
         android:theme="@style/Theme.UthSmartTasks">
 
+        <!-- ⚙️ Google Sign-In -->
+        <meta-data
+            android:name="com.google.android.gms.signin.CLIENT_ID"
+            android:value="@string/google_client_id" />
+
+        <!-- ✅ Activity chính -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -27,7 +40,7 @@
             </intent-filter>
         </activity>
 
-        <!-- DỊCH VỤ NHẬN FCM -->
+        <!-- ✅ Dịch vụ nhận thông báo Firebase -->
         <service
             android:name=".MyFirebaseMessagingReceiver"
             android:exported="false">
@@ -36,5 +49,24 @@
             </intent-filter>
         </service>
 
+        <!-- ✅ Dịch vụ FirebaseAuth (OTP qua SMS) -->
+        <service
+            android:name="com.google.firebase.auth.api.phone.FirebaseAuthService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.auth.api.phone.ACTION_AUTHENTICATE" />
+            </intent-filter>
+        </service>
+
+        <!-- ⚙️ Firebase mặc định -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/purple_500" />
+
     </application>
+
 </manifest>

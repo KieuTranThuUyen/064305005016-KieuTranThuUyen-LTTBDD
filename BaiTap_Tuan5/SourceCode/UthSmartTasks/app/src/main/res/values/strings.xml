@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">UthSmartTasks</string>
+    <string name="google_client_id">1070677603381-p031l5ov6fjahunhs3l7qutavnck8pgh.apps.googleusercontent.com</string>
 </resources>
