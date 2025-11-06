@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "1070677603381-bpev9bg01ut0tduve88ju78pdveq78h6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.uthsmarttasks",
+            "certificate_hash": "d3aed85f96ac3e29a38df59e794f0c86d13ba3ee"
+          }
+        },
+        {
           "client_id": "1070677603381-jitncmejaf4gc7ul0m98mkrf85b9piv0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
